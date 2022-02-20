@@ -1,4 +1,7 @@
 let map;
+let baseMaps;
+let safra = L.layerGroup();
+let overlays;
 
 async function main() {
   function init() {
@@ -6,6 +9,7 @@ async function main() {
 
     window.addEventListener('DOMContentLoaded', function(){
         loadData();
+        loadSafra();
     })
   }
 
@@ -41,12 +45,24 @@ async function main() {
     
 
     // Set up base layers
-    let baseMaps = {
+    baseMaps = {
         "Light" : lightMode,
         "Dark" : darkMode
     };
+
+    // let safraLatLng = safraCoordinates();
+    // console.log(safraLatLng)
+    
+    // for(let item of safraLatLng){
+    //   let marker = L.marker(item);
+    //   marker.addTo(safraLayer)
+    // }
+
+    overlays = {
+      "SAFRA" : safra
+    }
     // {collapsed=false}??
-    L.control.layers(baseMaps).addTo(map);
+    L.control.layers(baseMaps, overlays).addTo(map);
 
     return map;
   }

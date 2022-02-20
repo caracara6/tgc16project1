@@ -23,8 +23,25 @@ async function loadData() {
 }
 
 async function loadSafra() {
-    let response = await axios.get('')
+    let response = await axios.get('data/SAFRA.geojson');
+    let safraLayer = L.geoJSON(response.data, {
+        onEachFeature: function(feature, layer){
+            layer.bindPopup(feature.properties.name)
+        }
+    }).addTo(safra);
+    return safraLayer
 }
+
+
+// async function safraCoordinates() {
+//     let response = await axios.get('data/SAFRA.geojson');
+//     let safraLatLng = [];
+//     for (let item of response.data.features) {
+//         safraLatLng.push([item.geometry.coordinates[1], item.geometry.coordinates[0]]);
+//     }
+//     console.log(safraLatLng)
+//     return safraLatLng;
+// }
 
 // async function search(place){
 
