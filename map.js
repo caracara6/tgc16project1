@@ -1,6 +1,10 @@
 let map;
-let baseMaps;
+let lightMode;
+let darkMode;
 let safra = L.layerGroup();
+let schoolClusterLayer = L.markerClusterGroup();
+let searchSportsLayer = L.markerClusterGroup();
+let baseMaps;
 let overlays;
 
 async function main() {
@@ -10,6 +14,33 @@ async function main() {
     window.addEventListener('DOMContentLoaded', function(){
         loadData();
         loadSafra();
+        loadSchools();
+        let searchBtn = document.querySelector('#searchBtn');
+        searchBtn.addEventListener('click', async function(){
+
+          map.eachLayer(function (layer) {
+            map.removeLayer(layer);
+          });
+
+          let searchInput = document.querySelector('#searchInput').value;
+          // which part of the api to search?
+          let response = await axios.get('data/school_sports_facilities.geojson');
+          for(let item of response.data.features){
+            let dummyDiv = document.createElement('div')
+            dummyDiv.innerHTML = item.properties.description;
+            let sportsTargetArray = dummyDiv.querySelectorAll('td');
+            let sportsTarget = sportsTargetArray[15].innerHTML;
+            sportsTarget = sportsTarget.toLowerCase().trim().split(',')
+            // console.log(sportsTarget)
+            if (sportsTarget.includes(searchInput.toLowerCase().trim())) {
+              let sportsTargetMarker = L.marker([item.geometry.coordinates[1], item.geometry.coordinates[0]]);
+              sportsTargetMarker.addTo(searchSportsLayer)
+              searchSportsLayer.addTo(map);
+              document.querySelector('#result').innerHTML = item.properties.name
+            }
+          }
+          
+        })
     })
   }
 
@@ -20,7 +51,7 @@ async function main() {
     map.setView(singapore, 13);
 
     // Add light layer
-    let lightMode = L.tileLayer(
+    lightMode = L.tileLayer(
       "https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}",
       {
         attribution:
@@ -34,8 +65,9 @@ async function main() {
       }
     );
     lightMode.addTo(map)
+
     // Add dark layer
-    let darkMode = L.tileLayer('https://{s}.tile.jawg.io/jawg-matrix/{z}/{x}/{y}{r}.png?access-token={accessToken}', {
+    darkMode = L.tileLayer('https://{s}.tile.jawg.io/jawg-matrix/{z}/{x}/{y}{r}.png?access-token={accessToken}', {
         attribution: '<a href="http://jawg.io" title="Tiles Courtesy of Jawg Maps" target="_blank">&copy; <b>Jawg</b>Maps</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         minZoom: 0,
         maxZoom: 22,
@@ -50,17 +82,12 @@ async function main() {
         "Dark" : darkMode
     };
 
-    // let safraLatLng = safraCoordinates();
-    // console.log(safraLatLng)
-    
-    // for(let item of safraLatLng){
-    //   let marker = L.marker(item);
-    //   marker.addTo(safraLayer)
-    // }
-
+    // Set up overlays
     overlays = {
-      "SAFRA" : safra
+      "SAFRA" : safra,
+      "Dual-Use-Scheme" : schoolClusterLayer
     }
+
     // {collapsed=false}??
     L.control.layers(baseMaps, overlays).addTo(map);
 
